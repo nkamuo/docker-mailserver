@@ -8,6 +8,9 @@ services:
     env_file: mailserver.env
     # More information about the mail-server ports:
     # https://docker-mailserver.github.io/docker-mailserver/latest/config/security/understanding-the-ports/
+
+    environment:
+      SSL_TYPE: letsencrypt
     ports:
       - "25:25"    # SMTP  (explicit TLS => STARTTLS, Authentication is DISABLED => use port 465/587 instead)
       - "143:143"  # IMAP4 (explicit TLS => STARTTLS)
@@ -19,6 +22,7 @@ services:
       - ./docker-data/dms/mail-state/:/var/mail-state/
       - ./docker-data/dms/mail-logs/:/var/log/mail/
       - ./docker-data/dms/config/:/tmp/docker-mailserver/
+      - ./docker-data/letsencrypt:/etc/letsencrypt
       - /etc/localtime:/etc/localtime:ro
     restart: always
     stop_grace_period: 1m
