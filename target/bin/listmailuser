@@ -8,6 +8,10 @@ source /usr/local/bin/helpers/index.sh
 source /etc/dms-settings 2>/dev/null
 
 function _main() {
+  if [[ ${ACCOUNT_PROVISIONER} != 'FILE' ]]; then
+    _exit_with_error "This command is only compatible with 'ACCOUNT_PROVISIONER=FILE'"
+  fi
+
   local DATABASE_ACCOUNTS='/tmp/docker-mailserver/postfix-accounts.cf'
   local DATABASE_VIRTUAL='/tmp/docker-mailserver/postfix-virtual.cf'
 
@@ -69,7 +73,7 @@ function _bytes_to_human_readable_size() {
     echo '~'
   # Otherwise a value in KibiBytes (1024 bytes == 1k) is expected (Dovecots internal representation):
   elif [[ ${1:-} =~ ^[0-9]+$ ]]; then
-    # kibibytes to bytes, converted to approproate IEC unit (eg: MiB):
+    # kibibytes to bytes, converted to appropriate IEC unit (eg: MiB):
     echo $(( 1024 * ${1} )) | numfmt --to=iec
   else
     _exit_with_error "Supplied non-number argument '${1:-}' to '_bytes_to_human_readable_size()'"

@@ -64,6 +64,7 @@ ${RED}[${ORANGE}SUB${RED}]${ORANGE}COMMANDS${RESET}
 
     ${LBLUE}COMMAND${RESET} debug ${RED}:=${RESET}
         setup debug ${CYAN}fetchmail${RESET}
+        setup debug ${CYAN}getmail${RESET}
         setup debug ${CYAN}login${RESET} <COMMANDS>
         setup debug ${CYAN}show-mail-logs${RESET}
 
@@ -73,7 +74,7 @@ ${ORANGE}EXAMPLES${RESET}
         to input a password afterwards since no password was supplied.
 
     ${LWHITE}setup config dkim keysize 2048 domain 'example.com,not-example.com'${RESET}
-        Creates keys of length 2048 for the domains in comma-seperated list.
+        Creates keys of length 2048 for the domains in comma-separated list.
         This is necessary when using LDAP as the required domains cannot be inferred.
 
     ${LWHITE}setup config dkim help${RESET}
@@ -150,6 +151,7 @@ function _main() {
     ( debug )
       case ${2:-} in
         ( fetchmail      ) debug-fetchmail ;;
+        ( getmail        ) debug-getmail ;;
         ( show-mail-logs ) cat /var/log/mail/mail.log ;;
         ( login          )
           shift 2

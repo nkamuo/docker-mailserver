@@ -29,7 +29,7 @@ Cloudflare has written an [article about DKIM, DMARC and SPF][cloudflare-dkim-dm
 When DKIM is enabled:
 
 1. Inbound mail will verify any included DKIM signatures
-2. Outbound mail is signed (_when you're sending domain has a configured DKIM key_)
+2. Outbound mail is signed (_when your sending domain has a configured DKIM key_)
 
 DKIM requires a public/private key pair to enable **signing (_via private key_)** your outgoing mail, while the receiving end must query DNS to **verify (_via public key_)** that the signature is trustworthy.
 
@@ -54,7 +54,7 @@ You'll need to repeat this process if you add any new domains.
 
 You should have:
 
-- At least one [email account setup][docs-accounts-add]
+- At least one [email account setup][docs-accounts]
 - Attached a [volume for config][docs-volumes-config] to persist the generated files to local storage
 
 !!! example "Creating DKIM Keys"
@@ -76,7 +76,7 @@ You should have:
 ??? info "Changing the key size"
 
     The keypair generated for using with DKIM presently defaults to RSA-2048. This is a good size but you can lower the security to `1024-bit`, or increase it to `4096-bit` (_discouraged as that is excessive_).
-    
+
     To generate a key with different size (_for RSA 1024-bit_) run:
 
     ```sh
@@ -137,7 +137,7 @@ DKIM is currently supported by either OpenDKIM or Rspamd:
 
         If you have multiple domains, you need to:
 
-        - Create a key wth `docker exec -it <CONTAINER NAME> setup config dkim domain <DOMAIN>` for each domain DMS should sign outgoing mail for.
+        - Create a key with `docker exec -it <CONTAINER NAME> setup config dkim domain <DOMAIN>` for each domain DMS should sign outgoing mail for.
         - Provide a custom `dkim_signing.conf` (for which an example is shown below), as the default config only supports one domain.
 
     !!! info "About the Helper Script"
@@ -148,9 +148,7 @@ DKIM is currently supported by either OpenDKIM or Rspamd:
 
         ---
 
-        In case you have not already provided a default DKIM signing configuration, the script will create one and write it to `/etc/rspamd/override.d/dkim_signing.conf`. If this file already exists, it will not be overwritten.
-
-        When you're already using [the `rspamd/override.d/` directory][docs-rspamd-config-dropin], the file is created inside your volume and therefore persisted correctly. If you are not using `rspamd/override.d/`, you will need to persist the file yourself (otherwise it is lost on container restart).
+        In case you have not already provided a default DKIM signing configuration, the script will create one and write it to `/tmp/docker-mailserver/rspamd/override.d/dkim_signing.conf`. If this file already exists, it will not be overwritten.
 
         An example of what a default configuration file for DKIM signing looks like can be found by expanding the example below.
 
@@ -364,7 +362,6 @@ volumes:
 [docs-env-opendkim]: ../environment.md#enable_opendkim
 [docs-env-rspamd]: ../environment.md#enable_rspamd
 [docs-env-spf-policyd]: ../environment.md#enable_policyd_spf
-[docs-rspamd-config-dropin]: ../security/rspamd.md#manually
 [cloudflare-dkim-dmarc-spf]: https://www.cloudflare.com/learning/email-security/dmarc-dkim-spf/
 [rfc-8301]: https://datatracker.ietf.org/doc/html/rfc8301#section-3.2
 [gh-discussion::dkim-key-rotation-expiry]: https://github.com/orgs/docker-mailserver/discussions/4068#discussioncomment-9784263

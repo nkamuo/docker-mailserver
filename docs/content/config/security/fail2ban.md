@@ -14,18 +14,48 @@ hide:
 
 ## Configuration
 
-!!! warning
+Enabling Fail2Ban support can be done via ENV, but also requires granting at least the `NET_ADMIN` capability to interact with the kernel and ban IP addresses.
 
-    DMS must be launched with the `NET_ADMIN` capability in order to be able to install the NFTables rules that actually ban IP addresses. Thus, either include `--cap-add=NET_ADMIN` in the `docker run` command, or the equivalent in the `compose.yaml`:
+!!! example
 
-    ```yaml
-    cap_add:
-      - NET_ADMIN
-    ```
+    === "Docker Compose"
+
+        ```yaml title="compose.yaml"
+        services:
+          mailserver:
+            environment:
+              - ENABLE_FAIL2BAN=1
+            cap_add:
+              - NET_ADMIN
+        ```
+
+    === "Docker CLI"
+
+        ```bash
+        docker run --rm -it \
+          --cap-add=NET_ADMIN \
+          --env ENABLE_FAIL2BAN=1
+        ```
+
+!!! warning "Security risk of adding non-default capabilities"
+
+    DMS bundles F2B into the image for convenience to simplify integration and deployment.
+
+    The [`NET_ADMIN`][security::cap-net-admin] and [`NET_RAW`][security::cap-net-raw] capabilities are not granted by default to the container root user, as they can be used to compromise security.
+
+    If this risk concerns you, it may be wiser to instead prefer only granting these capabilities to a dedicated Fail2Ban container ([example][lsio:f2b-image]).
 
 !!! bug "Running Fail2Ban on Older Kernels"
 
-    DMS configures F2B to use NFTables, not IPTables (legacy). We have observed that older systems, for example NAS systems, do not support the modern NFTables rules. You will need to configure F2B to use legacy IPTables again, for example with the [``fail2ban-jail.cf``][github-file-f2bjail], see the [section on configuration further down below](#custom-files).
+    DMS configures F2B to use [NFTables][network::nftables], not [IPTables (legacy)][network::iptables-legacy].
+
+    We have observed that older systems (for example NAS systems), do not support the modern NFTables rules. You will need to configure F2B to use legacy IPTables again, for example with the [`fail2ban-jail.cf`][github-file-f2bjail], see the [section on configuration further down below](#custom-files).
+
+[security::cap-net-admin]: https://0xn3va.gitbook.io/cheat-sheets/container/escaping/excessive-capabilities#cap_net_admin
+[security::cap-net-raw]: https://0xn3va.gitbook.io/cheat-sheets/container/escaping/excessive-capabilities#cap_net_raw
+[lsio:f2b-image]: https://docs.linuxserver.io/images/docker-fail2ban
+[network::nftables]: https://en.wikipedia.org/wiki/Nftables
+[network::iptables-legacy]: https://developers.redhat.com/blog/2020/08/18/iptables-the-two-variants-and-their-relationship-with-nftables#two_variants_of_the_iptables_command
 
 ### DMS Defaults
 
@@ -47,6 +77,15 @@ This following configuration files inside the `docker-data/dms/config/` volume w
 [docs::dms-volumes-config]: ../advanced/optional-config.md#volumes-config
 [github-file-f2bjail]: https://github.com/docker-mailserver/docker-mailserver/blob/master/config-examples/fail2ban-jail.cf
 [github-file-f2bconfig]: https://github.com/docker-mailserver/docker-mailserver/blob/master/config-examples/fail2ban-fail2ban.cf
+
+### SASL
+
+The `postfix` jail comes with `mode=extra` by default, which covers SASL login errors for our default SASL provider. Hence, the `postfix-sasl` jail has been disabled. If you switch to another SASL provider (e.g., SASLauthd), you may want to turn the `postfix-sasl` jail back on:
+
+```ini title="docker-data/dms/config/fail2ban-jail.cf"
+[postfix-sasl]
+enabled = true
+```
 
 ### Viewing All Bans
 

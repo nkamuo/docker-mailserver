@@ -2,39 +2,160 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/docker-mailserver/docker-mailserver/compare/v14.0.0...HEAD)
+## [Unreleased](https://github.com/docker-mailserver/docker-mailserver/compare/v15.1.0...HEAD)
 
 > **Note**: Changes and additions listed here are contained in the `:edge` image tag. These changes may not be as stable as released changes.
 
-### Security
+### Removed
 
-- **Fail2ban:**
-  - Ensure a secure connection, when downloading the fail2ban package ([#4080](https://github.com/docker-mailserver/docker-mailserver/pull/4080))
+- **SpamAssassin:**
+  - Removed Pyzor + Razor due to maintenance concerns. From observations it is unlikely to have any notable regression ([#4548](https://github.com/docker-mailserver/docker-mailserver/pull/4548))
+
+### Updated
+
+- **Internal:**
+  - Aligning with the change in upstream Debian, APT package repositories added by DMS have migrated the format from `.list` to `.sources` ([DEB822](https://repolib.readthedocs.io/en/latest/deb822-format.html)) ([#4556](https://github.com/docker-mailserver/docker-mailserver/pull/4556))
+  - Third-party sourced CLI tools updated ([#4557](https://github.com/docker-mailserver/docker-mailserver/pull/4557)):
+    - `jaq` from `2.1.0` to [`2.3.0`](https://github.com/01mf02/jaq/releases/tag/v2.3.0)
+    - `step` CLI from `0.28.2` to [`0.28.7`](https://github.com/smallstep/cli/releases/tag/v0.28.7))
+- **Dovecot**
+  - Updated the FTS plugin Xapian from `1.9` to [`1.9.1`](https://github.com/grosjo/fts-xapian/releases/tag/1.9.1) which adds Dovecot 2.4 compatibility ([#4557](https://github.com/docker-mailserver/docker-mailserver/pull/4557))
+
+## [v15.1.0](https://github.com/docker-mailserver/docker-mailserver/compare/v15.1.0...HEAD)
+
+> [!NOTE]
+>
+> This release is the last release before we start with breaking changes for the transition to Debian 13.
+
+### Added
+
+- **Environment Variables:**
+  - [ENV can be declared with a `__FILE` suffix](https://docker-mailserver.github.io/docker-mailserver/v15.1/config/environment/) to read a value from a file during initial DMS setup scripts ([#4359](https://github.com/docker-mailserver/docker-mailserver/pull/4359))
+  - Improved docs for the ENV `OVERRIDE_HOSTNAME` ([#4492](https://github.com/docker-mailserver/docker-mailserver/pull/4492))
+- **Internal:**
+  - [`DMS_CONFIG_POLL`](https://docker-mailserver.github.io/docker-mailserver/v15.0/config/environment/#dms_config_poll) supports adjusting the polling rate (seconds) for the change detection service `check-for-changes.sh` ([#4450](https://github.com/docker-mailserver/docker-mailserver/pull/4450))
+
+### Fixes
+
+- **DKIM**
+  - `setup config dkim domain subdomain.example.com` no longer throws an error if the owner of config/opendkim/keys does not exist in the container ([#4517](https://github.com/docker-mailserver/docker-mailserver/pull/4517))
+- **Fail2Ban**
+  - Configure logrotate only when Fail2Ban is enabled ([#4493](https://github.com/docker-mailserver/docker-mailserver/pull/4523))
+- **Internal:**
+  - The DMS _Config Volume_ (`/tmp/docker-mailserver`) will now ensure it's file tree is accessible for services when the volume was created with missing executable bit ([#4487](https://github.com/docker-mailserver/docker-mailserver/pull/4487))
+  - Removed the build-time hostname workaround for Postfix as Debian has since patched their post-install script ([#4493](https://github.com/docker-mailserver/docker-mailserver/pull/4493))
+  - Fixed various typos across codebase ([#4552](https://github.com/docker-mailserver/docker-mailserver/pull/4552))
+
+### Updates
+
+- **Documentation:**
+  - Added a compatibility note for a Dovecot + Solr 9.8 breaking change ([#4433](https://github.com/docker-mailserver/docker-mailserver/pull/4433))
+  - Updated the Podman documentation with deprecation warnings and up-to-date technologies such as rootless Quadlets and Pasta networking ([#4183](https://github.com/docker-mailserver/docker-mailserver/pull/4183))
+  - `setup config dkim` (rspamd) - Corrected the expected path for the generated `dkim_signing.conf` file is now found in the DMS config volume ([#4521](https://github.com/docker-mailserver/docker-mailserver/issues/4521))
+- **Internal:**
+  - Refactored `setup config dkim` (`open-dkim`) ([#4375](https://github.com/docker-mailserver/docker-mailserver/pull/4375))
+  - `setup email list` and the default `ENABLE_QUOTAS=1` ENV now better communicates when config is incompatible ([#4453](https://github.com/docker-mailserver/docker-mailserver/pull/4453))
+
+### Removed
+
+- **Fail2Ban**
+  - Removed `postfix-sasl` jail by default as it is covered by `postfix[mode=extra]` already ([#4535](https://github.com/docker-mailserver/docker-mailserver/pull/4535))
+
+## [v15.0.2](https://github.com/docker-mailserver/docker-mailserver/releases/tag/v15.0.2)
+
+### Fixes
+
+- **Postfix**
+  - Avoid modifying the message body when filtering sender headers. This regression was introduced from [#4120](https://github.com/docker-mailserver/docker-mailserver/pull/4120) as part of DMS v15.0.0 ([#4429](https://github.com/docker-mailserver/docker-mailserver/pull/4429))
+
+## [v15.0.1](https://github.com/docker-mailserver/docker-mailserver/releases/tag/v15.0.1)
+
+### Added
+
+- **Internal:**
+  - Added the Smallstep `step` CLI command for future internal usage ([#4376](https://github.com/docker-mailserver/docker-mailserver/pull/4376))
+
+### Fixes
+
+- **Postfix:**
+  - `setup email restrict` generated configs now only prepend to `dms_smtpd_sender_restrictions` ([#4379](https://github.com/docker-mailserver/docker-mailserver/pull/4379))
+- **Rspamd:**
+  - Change detection support now monitors all files found within the DMS _Config Volume_ Rspamd directory ([#4418](https://github.com/docker-mailserver/docker-mailserver/pull/4418))
+- **Internal:**
+  - A permissions fix for `/var/log/mail` that was [added in DMS v15]((https://github.com/docker-mailserver/docker-mailserver/pull/4374)) no longer encounters an error when no log files are present during a container restart, such as with a `tmpfs` volume mount ([#4391](https://github.com/docker-mailserver/docker-mailserver/pull/4391))
+  - The DMS _State Volume_ (`/var/mail-state`) will now ensure it's file tree is accessible for services when the volume was created with missing executable bit ([#4420](https://github.com/docker-mailserver/docker-mailserver/pull/4420))
+  - The DMS _Config Volume_ (`/tmp/docker-mailserver`) now correctly updates permissions on container restarts ([#4417](https://github.com/docker-mailserver/docker-mailserver/pull/4417))
+
+### Updates
+
+- **Internal:**
+  - Minor improvements to `_install_utils()` in `packages.sh` ([#4376](https://github.com/docker-mailserver/docker-mailserver/pull/4376))
+
+## [v15.0.0](https://github.com/docker-mailserver/docker-mailserver/releases/tag/v15.0.0)
+
+### Breaking
+
+- **saslauthd** mechanism support via ENV `SASLAUTHD_MECHANISMS` with `pam`, `shadow`, `mysql` values has been removed. Only `ldap` and `rimap` remain supported ([#4259](https://github.com/docker-mailserver/docker-mailserver/pull/4259))
+- **getmail6** has been refactored: ([#4156](https://github.com/docker-mailserver/docker-mailserver/pull/4156))
+  - The [DMS config volume](https://docker-mailserver.github.io/docker-mailserver/v15.0/config/advanced/optional-config/#volumes) now has support for `getmailrc_general.cf` for overriding [common default settings](https://docker-mailserver.github.io/docker-mailserver/v15.0/config/advanced/mail-getmail/#common-options). If you previously mounted this config file directly to `/etc/getmailrc_general` you should switch to our config volume support.
+  - Generated getmail configuration files no longer set the `message_log` option. Instead of individual log files per config, the [default base settings DMS configures](https://github.com/docker-mailserver/docker-mailserver/tree/v15.0.0/target/getmail/getmailrc_general) now enables `message_log_syslog`. This aligns with how other services in DMS log to syslog where it is captured in `mail.log`.
+  - Getmail configurations have changed location from the base of the DMS Config Volume, to the `getmail/` subdirectory. Any existing configurations **must be migrated manually.**
+  - **DMS v14 mistakenly** relocated the _getmail state directory_ to the _DMS Config Volume_ as a `getmail/` subdirectory.
+    - This has been corrected to `/var/lib/getmail` (_if you have mounted a DMS State Volume to `/var/mail-state`, `/var/lib/getmail` will be symlinked to `/var/mail-state/lib-getmail`_).
+    - To preserve this state when upgrading to DMS v15, **you must manually migrate `getmail/` from the _DMS Config Volume_ to `lib-getmail/` in the _DMS State Volume_.**
+  - `setup email delete <EMAIL ADDRESS>` now requires explicit confirmation if the mailbox data should be deleted ([#4365](https://github.com/docker-mailserver/docker-mailserver/pull/4365)).
+- **Rspamd:** Removed deprecated file path check (_DMS config volume: `./rspamd-modules.conf` => `./rspamd/custom-commands.conf`_) ([#4373](https://github.com/docker-mailserver/docker-mailserver/pull/4373))
 
 ### Added
 
 - **Internal:**
   - Add password confirmation to several `setup` CLI subcommands ([#4072](https://github.com/docker-mailserver/docker-mailserver/pull/4072))
+  - Added a `debug getmail` subcommand to `setup` ([#4346](https://github.com/docker-mailserver/docker-mailserver/pull/4346))
 
 ### Updates
 
-- **Fail2ban:**
-  - Bump version to [1.1.0](https://github.com/fail2ban/fail2ban/releases/tag/1.1.0). For more information, check the [changelog](https://github.com/fail2ban/fail2ban/blob/1.1.0/ChangeLog).
+- **Internal:**
+  - **Removed `VERSION` file** from the repo. Releases of DMS prior to v13 (Nov 2023) would check this to detect new releases ([#3677](https://github.com/docker-mailserver/docker-mailserver/issues/3677), [#4321](https://github.com/docker-mailserver/docker-mailserver/pull/4321))
+  - During image build, ensure a secure connection when downloading the `fail2ban` package ([#4080](https://github.com/docker-mailserver/docker-mailserver/pull/4080))
 - **Documentation:**
-  - Rewritten and organized the pages for Account Management and Authentication ([#4122](https://github.com/docker-mailserver/docker-mailserver/pull/4122))
-  - Add caveat for `DMS_VMAIL_UID` not being compatible with `0` / root ([#4143](https://github.com/docker-mailserver/docker-mailserver/pull/4143))
+  - Account Management and Authentication pages have been rewritten and better organized ([#4122](https://github.com/docker-mailserver/docker-mailserver/pull/4122))
+  - Add a caveat for `DMS_VMAIL_UID` not being compatible with `0` / root ([#4143](https://github.com/docker-mailserver/docker-mailserver/pull/4143))
+- **Getmail:** ([#4156](https://github.com/docker-mailserver/docker-mailserver/pull/4156))
+  - Added `getmail` as a new service for `supervisor` to manage, replacing cron for periodic polling.
+  - IMAP/POP3 example configs added to our [`config-examples`](https://github.com/docker-mailserver/docker-mailserver/tree/v15.0.0/config-examples/getmail).
+  - ENV [`GETMAIL_POLL`](https://docker-mailserver.github.io/docker-mailserver/v15.0/config/environment/#getmail_poll) now supports values above 30 minutes.
 - **Postfix:**
-  - Disable Microsoft reactions to outgoing mail ([#4120](https://github.com/docker-mailserver/docker-mailserver/pull/4120))
+  - By default opt-out from _Microsoft reactions_ for outbound mail ([#4120](https://github.com/docker-mailserver/docker-mailserver/pull/4120))
+- **Rspamd:**
+  - Updated GTube settings and tests ([#4191](https://github.com/docker-mailserver/docker-mailserver/pull/4191))
+- Updated externally installed software ([#4357](https://github.com/docker-mailserver/docker-mailserver/pull/4357)):
+  - `DOVECOT_COMMUNITY_REPO=1` custom image build ARG now supports the latest Dovecot [`2.4.x`](https://github.com/dovecot/core/releases/tag/2.4.0) (_DMS provides Dovecot `2.3.19` by default_)
+  - Dovecot FTS Xapian module (`1.7.12` => [`1.9.0`](https://github.com/grosjo/fts-xapian/releases/tag/1.9))
+  - `jaq` (`1.3.0` => [`2.1.0`](https://github.com/01mf02/jaq/releases/tag/v2.1.0))
+  - Fail2Ban (`1.0.2-2` => [`1.1.0`](https://github.com/fail2ban/fail2ban/releases/tag/1.1.0)) ([#4045](https://github.com/docker-mailserver/docker-mailserver/pull/4045))
+  - Rspamd (`3.8.4` => [`3.11.0`](https://github.com/rspamd/rspamd/releases/tag/3.11.0)) - Implicitly upgraded during image build, as the third-party repo lacks version pinning support.
 
 ### Fixes
 
 - **Dovecot:**
-  - Update logwatch `ignore.conf` to exclude Xapian messages about pending documents ([#4060](https://github.com/docker-mailserver/docker-mailserver/pull/4060))
-  - `dovecot-fts-xapian` plugin was updated to `1.7.13`, fixing a regression with indexing ([#4095](https://github.com/docker-mailserver/docker-mailserver/pull/4095))
+  - The logwatch `ignore.conf` now also excludes Xapian messages about pending documents ([#4060](https://github.com/docker-mailserver/docker-mailserver/pull/4060))
+  - `dovecot-fts-xapian` plugin was updated, fixing a regression with indexing ([#4095](https://github.com/docker-mailserver/docker-mailserver/pull/4095))
+  - The "dummy account" workaround for _Dovecot Quota_ feature support no longer treats the alias as a regex when checking the Dovecot UserDB ([#4222](https://github.com/docker-mailserver/docker-mailserver/pull/4222))
+- **LDAP:**
+  - Correctly apply a compatibility fix for OAuth2 introduced in DMS `v13.3.1` which had not been applied to the actual LDAP config changes ([#4175](https://github.com/docker-mailserver/docker-mailserver/pull/4175))
+- **Internal:**
+  - The main `mail.log` (_which is piped to stdout via `tail`_) now correctly begins from the first log line of the active container run. Previously some daemon logs and potential warnings/errors were omitted ([#4146](https://github.com/docker-mailserver/docker-mailserver/pull/4146))
+  - `start-mailserver.sh` removed unused `shopt -s inherit_errexit` ([#4161](https://github.com/docker-mailserver/docker-mailserver/pull/4161))
+  - Fixed a regression introduced in DMS v14 where `postfix-main.cf` appended `stderr` output into `/etc/postfix/main.cf`, causing Postfix startup to fail ([#4147](https://github.com/docker-mailserver/docker-mailserver/pull/4147))
+  - Fixed a regression introduced in DMS v14 to better support running `start-mailserver.sh` with container restarts, which now only skip calling `_setup()` ([#4323](https://github.com/docker-mailserver/docker-mailserver/pull/4323#issuecomment-2629559254), [#4374](https://github.com/docker-mailserver/docker-mailserver/pull/4374))
+  - The command `swaks --help` is now functional ([#4282](https://github.com/docker-mailserver/docker-mailserver/pull/4282))
+- **Rspamd:**
+  - DKIM private key path checking is now performed only on paths that do not contain `$` ([#4201](https://github.com/docker-mailserver/docker-mailserver/pull/4201))
 
 ### CI
 
-- Workflow for `CONTRIBUTORS.md` updates removed. `CONTRIBUTORS.md` file and dependencies removed. ([#4141](https://github.com/docker-mailserver/docker-mailserver/pull/4141))
+- Removed `CONTRIBUTORS.md`, `.all-contributorsrc`, and workflow ([#4141](https://github.com/docker-mailserver/docker-mailserver/pull/4141))
+- Refactored the workflows to be more secure for generating documentation previews on PRs ([#4267](https://github.com/docker-mailserver/docker-mailserver/pull/4267), [#4264](https://github.com/docker-mailserver/docker-mailserver/pull/4264), [#4262](https://github.com/docker-mailserver/docker-mailserver/pull/4262), [#4247](https://github.com/docker-mailserver/docker-mailserver/pull/4247), [#4244](https://github.com/docker-mailserver/docker-mailserver/pull/4244))
 
 ## [v14.0.0](https://github.com/docker-mailserver/docker-mailserver/releases/tag/v14.0.0)
 
@@ -56,7 +177,7 @@ The most noteworthy change of this release is the update of the container's base
     - Removed custom installations of Fail2Ban, getmail6 and Rspamd
     - Updated packages lists and added comments for maintainability
 - OpenDMARC upgrade: `v1.4.0` => `v1.4.2` ([#3841](https://github.com/docker-mailserver/docker-mailserver/pull/3841))
-  - Previous versions of OpenDMARC would place incoming mail from domains announcing `p=quarantaine` (_that fail the DMARC check_) into the [Postfix "hold" queue](https://www.postfix.org/QSHAPE_README.html#hold_queue) until administrative intervention.
+  - Previous versions of OpenDMARC would place incoming mail from domains announcing `p=quarantine` (_that fail the DMARC check_) into the [Postfix "hold" queue](https://www.postfix.org/QSHAPE_README.html#hold_queue) until administrative intervention.
   - [OpenDMARC v1.4.2 has disabled that feature by default](https://github.com/trusteddomainproject/OpenDMARC/issues/105), but it can be enabled again by adding the setting `HoldQuarantinedMessages true` to [`/etc/opendmarc.conf`](https://github.com/docker-mailserver/docker-mailserver/blob/v13.3.1/target/opendmarc/opendmarc.conf) (_provided from DMS_).
     - [Our `user-patches.sh` feature](https://docker-mailserver.github.io/docker-mailserver/latest/config/advanced/override-defaults/user-patches/) provides a convenient approach to updating that config file.
     - Please let us know if you disagree with the upstream default being carried with DMS, or the value of providing alternative configuration support within DMS.
@@ -231,11 +352,11 @@ DMS is now secured against the [recently published spoofing attack "SMTP Smuggli
 
 - The test suite now uses `swaks` instead of `nc`, which has multiple benefits ([#3732](https://github.com/docker-mailserver/docker-mailserver/pull/3732)):
   - `swaks` handles pipelining correctly, hence we can now use `reject_unauth_pipelining` in Postfix's configuration.
-  - `swaks` provides better CLI options that make many files superflous.
+  - `swaks` provides better CLI options that make many files superfluous.
   - `swaks` can also replace `openssl s_client` and handles authentication on submission ports better.
 - **Postfix:**
   - We now defer rejection from unauthorized pipelining until the SMTP `DATA` command via `smtpd_data_restrictions` (_i.e. at the end of the mail transfer transaction_) ([#3744](https://github.com/docker-mailserver/docker-mailserver/pull/3744))
-    - Prevously our configuration only handled this during the client and recipient restriction stages. Postfix will flag this activity when encountered, but the rejection now is handled at `DATA` where unauthorized pipelining would have been valid from this point.
+    - Previously our configuration only handled this during the client and recipient restriction stages. Postfix will flag this activity when encountered, but the rejection now is handled at `DATA` where unauthorized pipelining would have been valid from this point.
     - If you had the Amavis service enabled (default), this restriction was already in place. Otherwise the concerns expressed with `smtpd_data_restrictions = reject_unauth_pipelining` from the security section above apply. We have permitted trusted clients (_`$mynetworks` or authenticated_) to bypass this restriction.
 
 ## [v13.1.0](https://github.com/docker-mailserver/docker-mailserver/releases/tag/v13.1.0)
@@ -466,7 +587,7 @@ Notable changes are:
 - Rspamd feature is promoted from preview status
 - Services no longer use `chroot`
 - Fail2Ban major version upgrade
-- ARMv7 platform is no longer suppoted
+- ARMv7 platform is no longer supported
 - TLS 1.2 is the minimum supported protocol
 - SMTP authentication on port 25 disabled
 - The value of `smtpd_sender_restrictions` for Postfix has replaced the value ([#3127](https://github.com/docker-mailserver/docker-mailserver/pull/3127)):
